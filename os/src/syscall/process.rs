@@ -51,7 +51,15 @@ pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
 }
 
 /// YOUR JOB: Finish sys_task_info to pass testcases
+/// (the ch3 task seems fun hmmm) 
 pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
     trace!("kernel: sys_task_info");
+    unsafe {
+        *_ti = TaskInfo {
+            status: TaskStatus::Running, // 测例调用时，当前任务一定是 Running 状态 
+            syscall_times: [0; MAX_SYSCALL_NUM],
+            time: 0,
+        };
+    }
     -1
 }
