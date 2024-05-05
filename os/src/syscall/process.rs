@@ -69,5 +69,5 @@ pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
     }
 
     TASK_MANAGER.increase_current_task_syscall_count(SYSCALL_TASK_INFO);
-    -1
+    0
 }
