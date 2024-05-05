@@ -56,6 +56,7 @@ pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
 /// (the ch3 task seems fun hmmm) 
 pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
     trace!("kernel: sys_task_info");
+    TASK_MANAGER.increase_current_task_syscall_count(SYSCALL_TASK_INFO);
 
     let _sys_ti = TASK_MANAGER.current_task_status();
     let _syscall_count_arr = TASK_MANAGER.current_task_syscall_count_array();
@@ -68,6 +69,5 @@ pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
         };
     }
 
-    TASK_MANAGER.increase_current_task_syscall_count(SYSCALL_TASK_INFO);
     0
 }
