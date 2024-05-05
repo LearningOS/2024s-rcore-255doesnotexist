@@ -1,6 +1,6 @@
 //! Process management syscalls
 use crate::{
-    config::MAX_SYSCALL_NUM, syscall::{SYSCALL_EXIT, SYSCALL_GET_TIME, SYSCALL_TASK_INFO, SYSCALL_YIELD}, task::{exit_current_and_run_next, suspend_current_and_run_next, TaskStatus, TASK_MANAGER}, timer::get_time_us
+    config::MAX_SYSCALL_NUM, task::{exit_current_and_run_next, suspend_current_and_run_next, TaskStatus, TASK_MANAGER}, timer::get_time_us
 };
 
 #[repr(C)]
@@ -24,7 +24,6 @@ pub struct TaskInfo {
 /// task exits and submit an exit code
 pub fn sys_exit(exit_code: i32) -> ! {
     trace!("[kernel] Application exited with code {}", exit_code);
-    TASK_MANAGER.increase_current_task_syscall_count(SYSCALL_EXIT);
     exit_current_and_run_next();
     panic!("Unreachable in sys_exit!");
 }
@@ -32,7 +31,6 @@ pub fn sys_exit(exit_code: i32) -> ! {
 /// current task gives up resources for other tasks
 pub fn sys_yield() -> isize {
     trace!("kernel: sys_yield");
-    TASK_MANAGER.increase_current_task_syscall_count(SYSCALL_YIELD);
     suspend_current_and_run_next();
     0
 }
@@ -47,8 +45,6 @@ pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
             usec: us % 1_000_000,
         };
     }
-
-    TASK_MANAGER.increase_current_task_syscall_count(SYSCALL_GET_TIME);
     0
 }
 
@@ -56,8 +52,6 @@ pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
 /// (the ch3 task seems fun hmmm) 
 pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
     trace!("kernel: sys_task_info");
-    TASK_MANAGER.increase_current_task_syscall_count(SYSCALL_TASK_INFO);
-
     let _sys_ti = TASK_MANAGER.current_task_status();
     let _syscall_count_arr = TASK_MANAGER.current_task_syscall_count_array();
 
@@ -65,7 +59,7 @@ pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
         *_ti = TaskInfo {
             status: _sys_ti, // 测例调用时，当前任务一定是 Running 状态 
             syscall_times: _syscall_count_arr,
-            time: 0,
+            time: crate::timer::get_time_ms() - TASK_MANAGER.current_task_begin_time(),
         };
     }
 
